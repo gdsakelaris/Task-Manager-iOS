@@ -8,17 +8,10 @@ import UIKit
 import CoreData
 class YourListsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, NSFetchedResultsControllerDelegate {
 
-    // Table containing the list of lists
-    @IBOutlet weak var YourListsTable: UITableView!
-    // Button to add a new list (takes user to "AddNewList" view)
-    @IBAction func AddNewListBTN(_ sender: Any) {
-        let addNewListViewController = self.storyboard?.instantiateViewController(withIdentifier: "AddNewListViewController") as! AddNewListViewController
-        self.navigationController?.pushViewController(addNewListViewController, animated: true)
-    }
-//
+    // setting up stored core data if there is any
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     var fetchedResultsController: NSFetchedResultsController<ListObject>!
-//
+    //
     func initializeFetchedResultsController() {
         let request: NSFetchRequest<ListObject> = ListObject.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "listName", ascending: true)
@@ -31,8 +24,17 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
             print("Failed to initialize FetchedResultsController: \(error)")
         }
     }
-//
-    // "Table containing the list of lists."
+    
+    // Table containing the list of lists
+    @IBOutlet weak var YourListsTable: UITableView!
+    
+    // Button to add a new list (takes user to "AddNewListViewController" view)
+    @IBAction func AddNewListBTN(_ sender: Any) {
+        let addNewListViewController = self.storyboard?.instantiateViewController(withIdentifier: "AddNewListViewController") as! AddNewListViewController
+        // push AddNewListViewController onto the nav stack
+        self.navigationController?.pushViewController(addNewListViewController, animated: true)
+    }
+    // set up for table containing the list of lists:
     func numberOfSections(in tableView: UITableView) -> Int {
         guard let sections = fetchedResultsController.sections else { return 0 }
         return sections.count
@@ -41,35 +43,42 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
         guard let sectionInfo = fetchedResultsController.sections?[section] else { return 0 }
         return sectionInfo.numberOfObjects
     }
+    // begin operation on specific cell
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "listCell", for: indexPath)
+        // long tap gesture for editing?
         configureCell(cell, at: indexPath)
         return cell
     }
+    // configures prototype cell/s for the list/s
     func configureCell(_ cell: UITableViewCell, at indexPath: IndexPath) {
         let list = fetchedResultsController.object(at: indexPath)
         cell.textLabel?.text = list.listName
+        cell.textLabel?.textColor = UIColor.black
+        cell.textLabel?.backgroundColor = UIColor.systemTeal
+        cell.backgroundColor = UIColor.systemTeal
+        cell.contentView.backgroundColor = UIColor.systemTeal
+        cell.selectionStyle = UITableViewCell.SelectionStyle.none
+        
     }
+    //
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let list = fetchedResultsController.object(at: indexPath)
         let listViewController = self.storyboard?.instantiateViewController(withIdentifier: "ListViewController") as! ListViewController
-        // error below
         listViewController.list = list
         self.navigationController?.pushViewController(listViewController, animated: true)
     }
-//
     // NSFetchedResultsControllerDelegate methods
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         YourListsTable.reloadData()
     }
-// Delete Functionality for Lists
-//
+    /// Delete Functionality for Lists
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             deleteList(at: indexPath)
         }
     }
-//
+    // Calling method to delete a list
     func deleteList(at indexPath: IndexPath) {
         let listToDelete = fetchedResultsController.object(at: indexPath)
         context.delete(listToDelete)
@@ -79,8 +88,7 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
             print("Failed to delete list: \(error)")
         }
     }
-//
-// End
+    // VIEWDIDLOAD
     override func viewDidLoad() {
         super.viewDidLoad()
         YourListsTable.delegate = self
@@ -89,13 +97,3 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
         initializeFetchedResultsController()
     }
 }
-
-
-
-// Invalid Outlets:
-
-// @IBOutlet weak var ListNameLabel: UILabel!
-
-// // Cell within "YourListsTable" table
-// @IBOutlet weak var YourListsTableCell: UITableViewCell!
-// Label within each "YourListsTableCell" that displays the name of the list

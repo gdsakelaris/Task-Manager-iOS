@@ -4,6 +4,7 @@
 //
 //  Created by Daniel Sakelaris on 3/9/23.
 //
+
 import UIKit
 import CoreData
 class ViewController: UIViewController {
@@ -12,7 +13,6 @@ class ViewController: UIViewController {
         let yourListsViewController = self.storyboard?.instantiateViewController(withIdentifier: "YourListsViewController") as! YourListsViewController
         self.navigationController?.pushViewController(yourListsViewController, animated: true)
     }
-//
     override func viewDidLoad() {
         super.viewDidLoad()
     }
