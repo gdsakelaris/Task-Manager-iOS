@@ -18,25 +18,16 @@ class AddNewListItemViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var NewListItemNameTextField: UITextField!
     
-    var hasDueDate: Bool = true
-    @IBOutlet weak var DueDateSwitch: UISwitch!
-    @IBAction func dueDateSwitchValueChanged(_ sender: UISwitch) {
-        hasDueDate = sender.isOn
-        DueDatePicker.isHidden = !hasDueDate
-        DueDateLabel.isHidden = !hasDueDate
-    }
     @IBOutlet weak var DueDatePicker: UIDatePicker!
-    @IBOutlet weak var DueDateLabel: UILabel!
+    @IBOutlet weak var DueDateTextField: UITextField!
+    
     @IBAction func dueDatePickerValueChanged(_ sender: UIDatePicker) {
-        updateDueDateLabel()
+        updateDueDateTextField()
     }
-    // UPDATE DUE DATE LABEL
-    func updateDueDateLabel() {
-        if hasDueDate {
-            DueDateLabel.text = "Due Date: " + DateFormatter.localizedString(from: DueDatePicker.date, dateStyle: .medium, timeStyle: .short)
-        } else {
-            DueDateLabel.text = ""
-        }
+    
+    // UPDATE DUE DATE TEXT FIELD
+    func updateDueDateTextField() {
+            DueDateTextField.text = DateFormatter.localizedString(from: DueDatePicker.date, dateStyle: .medium, timeStyle: .short)
     }
     
     // ???
@@ -46,17 +37,20 @@ class AddNewListItemViewController: UIViewController, UITextFieldDelegate {
     // Upon tapping, the user will be taken back to the "List" view, where the new list item will be displayed inside of the "ListItemsTable"
     // This means that the text entered in the "NewListItemNameTextField" text field will appear inside a new "ListItemNameLabel" label within a newly created "ListItemsTableCell" cell when the user taps the "SaveNewListItemBTN" button
     @IBAction func SaveNewListItemBTN(_ sender: Any) {
+        // check to see if the item is being edited, if so...
         if let itemName = NewListItemNameTextField.text {
             if let listItem = listItem {
+                // keep same name, list, date/time, etc. the same for now
                 listItem.itemName = itemName
                 listItem.list = list
-                if hasDueDate {
-                    listItem.dueDate = DueDatePicker.date
+                listItem.dueDate = DueDatePicker.date
+                    // option to change date/time and change that of the calendar event as well *over there* -->
                     let dateFormatter = DateFormatter()
                     dateFormatter.dateStyle = .short
                     dateFormatter.timeStyle = .short
-                    DueDateLabel.text = dateFormatter.string(from: DueDatePicker.date)
-                }
+                    DueDateTextField.text = dateFormatter.string(from: DueDatePicker.date)
+                //
+                // <-- *here*
                 updateCalendarEvent(for: listItem)
                 do {
                     try context.save()
@@ -71,15 +65,15 @@ class AddNewListItemViewController: UIViewController, UITextFieldDelegate {
                     newItem.itemName = newItemName
                     newItem.completed = false
                     newItem.list = list
-                    if hasDueDate {
+                    //
                         newItem.dueDate = DueDatePicker.date
                         createCalendarEvent(for: newItem)
                         scheduleNotification(for: newItem)
                         let dateFormatter = DateFormatter()
                         dateFormatter.dateStyle = .short
                         dateFormatter.timeStyle = .short
-                        DueDateLabel.text = dateFormatter.string(from: DueDatePicker.date)
-                    }
+                        DueDateTextField.text = dateFormatter.string(from: DueDatePicker.date)
+                    //
                     do {
                         try context.save()
                     } catch {
@@ -194,11 +188,12 @@ class AddNewListItemViewController: UIViewController, UITextFieldDelegate {
         if let listItem = listItem {
             NewListItemNameTextField.text = listItem.itemName
             DueDatePicker.date = listItem.dueDate!
+            DueDateTextField.text = DateFormatter.localizedString(from: DueDatePicker.date, dateStyle: .medium, timeStyle: .short)
         }
         
-        // bogus - fix this
-        DueDatePicker.isHidden = true
-        DueDateLabel.isHidden = true
+        //
+        DueDatePicker.isHidden = false
+        DueDateTextField.isHidden = false
         
         // outside keyboard
         let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing))

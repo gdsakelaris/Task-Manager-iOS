@@ -6,7 +6,11 @@
 //
 import UIKit
 import CoreData
+import EventKit
 class YourListsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, NSFetchedResultsControllerDelegate {
+   
+    var list: ListObject!
+    var listItem: ItemObject?
 
     // setting up stored core data if there is any
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -81,6 +85,26 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
     // Calling method to delete a list
     func deleteList(at indexPath: IndexPath) {
         let listToDelete = fetchedResultsController.object(at: indexPath)
+        
+        // Loop through all the items in the list and delete their corresponding calendar events (if they exist)
+        if let items = listToDelete.items as? Set<ItemObject> {
+            for item in items {
+                if let eventID = item.calendarEventID {
+                    let eventStore = EKEventStore()
+                    let event = eventStore.event(withIdentifier: eventID)
+                    if let event = event {
+                        do {
+                            try eventStore.remove(event, span: .thisEvent)
+                            print("Calendar event deleted")
+                        } catch {
+                            print("Failed to delete calendar event: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Delete the list itself
         context.delete(listToDelete)
         do {
             try context.save()
@@ -88,6 +112,7 @@ class YourListsViewController: UIViewController, UITableViewDataSource, UITableV
             print("Failed to delete list: \(error)")
         }
     }
+    
     // VIEWDIDLOAD
     override func viewDidLoad() {
         super.viewDidLoad()
